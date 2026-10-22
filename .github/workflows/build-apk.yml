@@ -1,5 +1,7 @@
 name: Build APK
 
+name: Build APK
+
 on:
   push:
     branches: [ main, master ]
@@ -14,7 +16,16 @@ jobs:
       - name: 下载工程源码
         run: |
           URL="https://morning-evening-checkin.app.workbuddy.host/android-src.b64?sharecode=3ZAXZZSNON&t=$(date +%s)"
-          curl -fsSL "$URL" -o src.b64
+          ok=0
+          for i in 1 2 3 4 5; do
+            if curl -fsSL --retry 3 --retry-delay 3 --retry-all-errors "$URL" -o src.b64; then
+              ok=1
+              break
+            fi
+            echo "第 $i 次下载失败，5 秒后重试..."
+            sleep 5
+          done
+          test "$ok" = 1
           base64 -d src.b64 | tar xz
           test -f app/src/main/AndroidManifest.xml
 
