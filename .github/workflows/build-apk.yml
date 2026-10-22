@@ -11,21 +11,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 下载工程源码
+      - name: 还原工程源码
         run: |
-          URL="https://morning-evening-checkin.app.workbuddy.host/android-src.b64?sharecode=3ZAXZZSNON&t=$(date +%s)"
-          ok=0
-          for i in 1 2 3 4 5; do
-            if curl -fsSL --retry 3 --retry-delay 3 --retry-all-errors "$URL" -o src.b64; then
-              ok=1
-              break
-            fi
-            echo "第 $i 次下载失败，5 秒后重试..."
-            sleep 5
-          done
-          test "$ok" = 1
-          base64 -d src.b64 | tar xz
+          f=$(ls -1 *.b64 2>/dev/null | head -1)
+          if [ -z "$f" ]; then echo "仓库根目录没找到 .b64 源码包"; exit 1; fi
+          echo "使用源码包: $f"
+          base64 -d "$f" > src.tar.gz
+          tar xzf src.tar.gz
           test -f app/src/main/AndroidManifest.xml
+          echo "工程还原完成"
 
       - name: 生成图标
         run: python3 ci_icons.py
@@ -41,7 +35,6 @@ jobs:
           mkdir -p "$SDK/licenses"
           echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$SDK/licenses/android-sdk-license"
           echo "84831b9409646a918e30573bab4c9c91346d8abd" > "$SDK/licenses/android-sdk-preview-license"
-          echo "SDK=$SDK"
 
       - uses: gradle/actions/setup-gradle@v4
         with:
