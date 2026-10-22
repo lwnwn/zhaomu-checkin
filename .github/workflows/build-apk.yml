@@ -13,7 +13,7 @@ jobs:
 
       - name: 下载工程源码
         run: |
-          URL="https://morning-evening-checkin.app.workbuddy.host/android-src.b64?sharecode=3ZAXZZSNON"
+          URL="https://morning-evening-checkin.app.workbuddy.host/android-src.b64?sharecode=3ZAXZZSNON&t=$(date +%s)"
           curl -fsSL "$URL" -o src.b64
           base64 -d src.b64 | tar xz
           test -f app/src/main/AndroidManifest.xml
