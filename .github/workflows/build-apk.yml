@@ -19,23 +19,27 @@ jobs:
           test -f app/src/main/AndroidManifest.xml
 
       - name: 生成图标
-        run: |
-          python3 ci_icons.py
-          ls app/src/main/res/mipmap-xxxhdpi
+        run: python3 ci_icons.py
 
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
+      - name: 准备 Android SDK 许可
+        run: |
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          mkdir -p "$SDK/licenses"
+          echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$SDK/licenses/android-sdk-license"
+          echo "84831b9409646a918e30573bab4c9c91346d8abd" > "$SDK/licenses/android-sdk-preview-license"
+          echo "SDK=$SDK"
 
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.2'
 
       - name: 编译 APK
-        run: gradle --no-daemon assembleDebug
+        run: gradle --no-daemon assembleDebug --stacktrace
 
       - name: 上传 APK
         uses: actions/upload-artifact@v4
