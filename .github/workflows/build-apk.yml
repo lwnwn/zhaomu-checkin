@@ -13,13 +13,26 @@ jobs:
 
       - name: 还原工程源码
         run: |
-          f=$(ls -1 *.b64 2>/dev/null | head -1)
-          if [ -z "$f" ]; then echo "仓库根目录没找到 .b64 源码包"; exit 1; fi
+          count=$(ls -1 *.b64 2>/dev/null | wc -l)
+          if [ "$count" -eq 0 ]; then echo "仓库根目录没找到 .b64 源码包"; exit 1; fi
+          if [ "$count" -gt 1 ]; then
+            echo "根目录有多个 .b64 文件，无法确定用哪个，请只保留一个："
+            ls -1 *.b64
+            exit 1
+          fi
+          f=$(ls -1 *.b64 | head -1)
           echo "使用源码包: $f"
+          echo "源码包大小: $(wc -c < "$f") 字节"
           base64 -d "$f" > src.tar.gz
           tar xzf src.tar.gz
           test -f app/src/main/AndroidManifest.xml
           echo "工程还原完成"
+
+      - name: 显示本次构建的版本号
+        run: |
+          echo "================ 本次构建版本 ================"
+          grep -n "versionName\|versionCode" app/build.gradle
+          echo "=============================================="
 
       - name: 生成图标
         run: python3 ci_icons.py
